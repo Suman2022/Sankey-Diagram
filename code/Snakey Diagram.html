@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sankey Diagram (Journal Ready)</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-sankey/0.12.3/d3-sankey.min.js"></script>
+
+<style>
+body {
+    margin: 0;
+    padding: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    background: white;
+}
+
+#chart {
+    width: 400%;
+    height: 800px;
+}
+
+button {
+    margin: 10px 0;
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.node rect {
+    stroke: none;
+}
+
+.node text {
+    pointer-events: none;
+    font-weight: bold;
+    font-size: 16px;   /* print-safe */
+}
+
+.link {
+    fill: none;
+    stroke-opacity: 0.25; /* print-safe */
+}
+
+.value-text {
+    font-weight: bold;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<button onclick="downloadSVG()">Download SVG</button>
+<div id="chart"></div>
+
+<script>
+/* ================= DATA ================= */
+
+const data = {
+    nodes: [
+        { name: "Retrieved journals from\nfive databases (Ulrich,\nWoS, Scopus, DOAJ\nand UGC-Care List)", value: "8,926", id: 0 },
+        { name: "Duplicate journals\nremoved", value: "1,947", id: 1 },
+        { name: "Unique \njournals", value: "6,979", id: 2 },
+        { name: "Journals removed\n(Ceased, never published\ninactive, suspended\nunresolved)", value: "1,009", id: 3 },
+        { name: "Active journals", value: "5,970", id: 4 },
+        { name: "Actively publishing and\nevaluated for APC\ninformation", value: "5,804", id: 5 },
+        { name: "Removed (incorporated\nand unresolved) journals", value: "166", id: 6 },
+        { name: "No APC Charges\njournals", value: "3,479", id: 7 },
+        { name: "APC Charge\njournals", value: "1,082", id: 8 },
+        { name: "Not found", value: "801", id: 9 },
+        { name: "Yes, not disclosed", value: "280", id: 10 },
+        { name: "Hybrid journal ", value: "7", id: 11 },
+        { name: "Other", value: "155", id: 12 }
+    ],
+
+    /* ORDER MATTERS */
+    links: [
+        { source: 0, target: 1, value: 1947 }, // Duplicate (TOP)
+        { source: 0, target: 2, value: 6979 }, // Unique (BELOW)
+
+        { source: 2, target: 3, value: 1009 },
+        { source: 2, target: 4, value: 5970 },
+        { source: 4, target: 5, value: 5804 },
+        { source: 4, target: 6, value: 166 },
+        { source: 5, target: 7, value: 3479 },
+        { source: 5, target: 8, value: 1082 },
+        { source: 5, target: 9, value: 801 },
+        { source: 5, target: 10, value: 280 },
+        { source: 5, target: 11, value: 155 },
+        { source: 5, target: 12, value: 7 }
+    ]
+};
+
+/* ================= SVG SETUP ================= */
+
+const width = 1200;
+const height = 600;
+const margin = { top: 20, right: 0, bottom: 00, left: 20 };
+
+const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("viewBox", [0, 0, width, height])
+    .attr("font-family", "Arial, Helvetica, sans-serif");
+
+/* ================= SANKEY ================= */
+
+const sankey = d3.sankey()
+    .nodeId(d => d.id)
+    .nodeWidth(20)
+    .nodePadding(12)
+    .nodeAlign(d3.sankeyLeft)
+    .nodeSort(null)
+    .linkSort(null)
+    .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]]);
+
+const { nodes, links } = sankey({
+    nodes: data.nodes.map(d => ({ ...d })),
+    links: data.links.map(d => ({ ...d }))
+});
+
+/* ================= MANUAL POSITIONING ================= */
+
+const topY = 10;
+
+/* Layer 2 */
+let h1 = nodes[1].y1 - nodes[1].y0;
+nodes[1].y0 = topY;
+nodes[1].y1 = topY + h1;
+
+let h2 = nodes[2].y1 - nodes[2].y0;
+nodes[2].y0 = nodes[1].y1 + 20;
+nodes[2].y1 = nodes[2].y0 + h2;
+
+/* Layer 3 */
+let h3 = nodes[3].y1 - nodes[3].y0;
+nodes[3].y0 = topY;
+nodes[3].y1 = topY + h3;
+
+let h4 = nodes[4].y1 - nodes[4].y0;
+nodes[4].y0 = nodes[3].y1 + 40;
+nodes[4].y1 = nodes[4].y0 + h4;
+
+/* Layer 4 */
+let h5 = nodes[5].y1 - nodes[5].y0;
+nodes[5].y0 = topY + 20;
+nodes[5].y1 = nodes[5].y0 + h5;
+
+let h6 = nodes[6].y1 - nodes[6].y0;
+nodes[6].y0 = nodes[5].y1 + 30;
+nodes[6].y1 = nodes[6].y0 + h6;
+
+/* Final layer */
+let yPos = topY;
+[7, 8, 9, 10, 11, 12].forEach(id => {
+    let h = nodes[id].y1 - nodes[id].y0;
+    nodes[id].y0 = yPos;
+    nodes[id].y1 = yPos + h;
+    yPos += h + 30;
+});
+
+sankey.update({ nodes, links });
+
+/* ================= COLORS (GRAYSCALE SAFE) ================= */
+
+const colors = [
+    '#4E79A7', '#E15759', '#59A14F', '#EDC948', '#1F3A5F',
+    '#76B7B2', '#F28E2B', '#B07AA1', '#FF9DA7', '#499894',
+    '#D37295', '#9D7660', '#7F7F7F'
+];
+
+/* ================= GRADIENTS ================= */
+
+const defs = svg.append("defs");
+
+links.forEach((link, i) => {
+    const g = defs.append("linearGradient")
+        .attr("id", `gradient-${i}`)
+        .attr("gradientUnits", "userSpaceOnUse")
+        .attr("x1", link.source.x1)
+        .attr("x2", link.target.x0);
+
+    g.append("stop").attr("offset", "0%").attr("stop-color", colors[link.source.id]);
+    g.append("stop").attr("offset", "100%").attr("stop-color", colors[link.target.id]);
+});
+
+/* ================= LINKS ================= */
+
+svg.append("g")
+    .selectAll("path")
+    .data(links)
+    .join("path")
+    .attr("class", "link")
+    .attr("d", d3.sankeyLinkHorizontal())
+    .attr("stroke", (d, i) => `url(#gradient-${i})`)
+    .attr("stroke-width", d => Math.max(1, d.width));
+
+/* ================= NODES ================= */
+
+const node = svg.append("g")
+    .selectAll("g")
+    .data(nodes)
+    .join("g")
+    .attr("class", "node");
+
+node.append("rect")
+    .attr("x", d => d.x0)
+    .attr("y", d => d.y0)
+    .attr("height", d => d.y1 - d.y0)
+    .attr("width", d => d.x1 - d.x0)
+    .attr("fill", d => colors[d.id]);
+
+node.each(function(d) {
+    const g = d3.select(this);
+
+    let xPos, anchor;
+    if ([1,2,3,4,6].includes(d.id)) {
+        xPos = d.x0 - 10;
+        anchor = "end";
+    } else {
+        const left = d.x0 < width / 2;
+        xPos = left ? d.x1 + 10 : d.x0 - 10;
+        anchor = left ? "start" : "end";
+    }
+
+    const lines = d.name.split('\n');
+    const startY = d.y0 + (d.y1 - d.y0) / 2 - (lines.length * 14) / 2;
+
+    lines.forEach((line, i) => {
+        g.append("text")
+            .attr("x", xPos)
+            .attr("y", startY + i * 17)
+            .attr("text-anchor", anchor)
+            .text(line);
+    });
+
+    g.append("text")
+        .attr("x", xPos)
+        .attr("y", startY + lines.length * 17)
+        .attr("text-anchor", anchor)
+        .attr("class", "value-text")
+        .text(d.value);
+});
+
+/* ================= SVG DOWNLOAD ================= */
+
+function downloadSVG() {
+    const svgEl = document.querySelector("svg");
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgEl);
+    source = '<?xml version="1.0" standalone="no"?>\n' + source;
+
+    const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sankey_journals.svg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
