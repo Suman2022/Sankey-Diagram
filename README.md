@@ -1,4 +1,7 @@
 # Sankey-Diagram
 How to create a Sankey Diagram and used my own dataset using D3.js
 The Sankey diagram depicts the stepwise filtering of journals published in India using metadata retrieved from five sources—Ulrich’s Periodicals Directory, Web of Science, Scopus, DOAJ, and the UGC-CARE List—yielding 8,926 records in total. After removing 1,947 duplicate entries, 6,979 unique journals were screened, of which 1,009 were excluded due to ceased publication, inactivity, suspension, or unresolved status. This process resulted in 5,970 active journals, with 5,804 actively publishing titles further evaluated for article processing charge (APC) information. Among these, 3,479 journals reported no APCs, 1,082 charged APCs, 801 had no APC information available, and 280 acknowledged APCs without disclosing amounts; a small subset comprised hybrid journals and other residual categories. The diagram provides a transparent overview of the identification of active journals and APC practices within the Indian scholarly publishing ecosystem.
+<img width="1206" height="607" alt="Snakey diagram" src="https://github.com/user-attachments/assets/255908d0-b6b8-4259-bfd1-44b440369c6b" />
 ![Uploading Snakey diagram.png…]()
+
+,,
